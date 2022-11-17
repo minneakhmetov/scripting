@@ -2,7 +2,7 @@
 
 draw_board(){
     clear
-    echo $EMPTY
+    echo "Ход: $STEP"
     D="-----------------"
     S="%s\n|%3s|%3s|%3s|%3s|\n"
     printf $S $D ${M[0]:-"."} ${M[1]:-"."} ${M[2]:-"."} ${M[3]:-"."}
@@ -10,11 +10,22 @@ draw_board(){
     printf $S $D ${M[8]:-"."} ${M[9]:-"."} ${M[10]:-"."} ${M[11]:-"."}
     printf $S $D ${M[12]:-"."} ${M[13]:-"."} ${M[14]:-"."} ${M[15]:-"."}
     echo $D
+    if (( ${#LEGAL_MOVEMENTS[@]} != 0 )); then
+        echo "Неверный ход! Невозможно костяшку $INPUT_STRING передвинуть на пустую ячейку"
+        echo "Можно выбрать: "
+        for NUMBER in "${LEGAL_MOVEMENTS[@]}"
+        do
+          echo -n "$NUMBER "
+        done
+        echo ""
+    fi
+    LEGAL_MOVEMENTS=()
 }
 
 init_game(){
     M=()
     EMPTY=
+    STEP=1
     RANDOM=$RANDOM
     for i in {1..15}
     do
@@ -41,7 +52,7 @@ exchange(){
 quit_game(){
     while :
     do
-        read -n 1 -s -p "Do you really want to quit [y/n]?"
+        read -n 1 -s -p "Вы действительно хотите выйти [y/n]?"
         case $REPLY in
             y|Y) exit
             ;;
@@ -59,7 +70,7 @@ check_win(){
             return
         fi
     done
-    echo "You won! Want to play another game [y/n]?"
+    echo "Вы собрали головоломку за $STEP ходов. Хотите сыграть еще раз [y/n]? "
     while :
     do
         read -n 1 -s
@@ -77,7 +88,8 @@ check_win(){
 start_game(){
 while :
 do
-    echo "Type number of cell for exchange, q for quit"
+    STEP=$(($STEP+1))
+    echo "Ваш ход (q - выход)"
     read INPUT_STRING
     if [[ $INPUT_STRING -eq "q" ]]; then
           quit_game
@@ -98,7 +110,12 @@ do
               DIRECTION="s"
               ;;
             *)
-              # do nothing
+              LEGAL_MOVEMENTS=()
+              [ $((EMPTY-1)) -gt -1 ] && LEGAL_MOVEMENTS+=($((M[EMPTY-1])))
+              [ $((EMPTY+1)) -lt 15 ] && LEGAL_MOVEMENTS+=($((M[EMPTY+1])))
+              [ $((EMPTY-4)) -gt -1 ] && LEGAL_MOVEMENTS+=($((M[EMPTY-4])))
+              [ $((EMPTY+4)) -lt 15 ] && LEGAL_MOVEMENTS+=($((M[EMPTY+4])))
+              echo ""
             ;;
           esac
         fi
