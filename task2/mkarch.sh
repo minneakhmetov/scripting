@@ -33,10 +33,10 @@ tar_file="$(pwd)/$name.tar.gz"
 tar -czvf $tar_file -C $dir_path .
 touch $name.sh
 echo '#!/bin/bash' >> $name.sh
-echo "tar_path=$tar_file" >> $name.sh
-printf 'dir_path=$(pwd)
-      usage="Usage: $(basename $0) [-o dir_path] [-h for help]"
-      while getopts ':o:h' opt; do
+echo "base64_archive=$(tar -czvf - $dir_path | base64)" >> $name.sh
+echo 'dir_path=$(pwd)' >> $name.sh
+printf 'usage="Usage: $(basename $0) [-o dir_path] [-h for help]"
+      while getopts ":o:h" opt; do
         case "$opt" in
           o)
             dir_path="$OPTARG"
@@ -55,8 +55,13 @@ printf 'dir_path=$(pwd)
             ;;
         esac
       done
-      shift "$(($OPTIND -1))"
-      tar -xzvf $tar_path -C $dir_path' >> $name.sh
+      shift "$(($OPTIND -1))"' >> $name.sh
+echo "" >> $name.sh
+echo "tar_path="'$dir_path'"/$name.tar.gz" >> $name.sh
+echo 'echo $base64_archive | base64 -d >> $tar_path' >> $name.sh
+echo 'tar -xzvf $tar_path -C $dir_path' >> $name.sh
+echo 'rm -f $tar_path' >> $name.sh
 chmod +x $name.sh
+rm -f $tar_file
 
 
